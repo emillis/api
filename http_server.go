@@ -43,7 +43,7 @@ func (hs HttpServer) Start() error {
 	port := fmt.Sprintf(":%d", hs.Port)
 
 	if hs.UseSecure {
-		return http.ListenAndServeTLS(port, hs.SSLCerticifatePath, hs.PrivateKey, nil)
+		return http.ListenAndServeTLS(port, hs.SSLCerticifatePath, hs.PrivateKeyPath, nil)
 	}
 
 	return http.ListenAndServe(":"+strconv.Itoa(hs.Port), nil)
