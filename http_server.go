@@ -1,5 +1,11 @@
 package api
 
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+)
+
 //===========[STATIC/CACHE]====================================================================================================
 
 var defaultHttpServer = HttpServer{
@@ -16,6 +22,12 @@ type HttpServer struct {
 
 	//UseSecure defines whether the server should be https or http
 	UseSecure bool
+
+	//Path to the SSL certificate file. Only needed if UseSecure is set to true
+	SSLCerticifatePath string
+
+	//Path to the Private Key file. Only used if UseSecure is set to true
+	PrivateKeyPath string
 }
 
 //PRIVATE
@@ -27,11 +39,14 @@ func (hs HttpServer) copy() HttpServer {
 
 //PUBLIC
 
-func (hs HttpServer) Start() {
+func (hs HttpServer) Start() error {
+	port := fmt.Sprintf(":%d", hs.Port)
+
 	if hs.UseSecure {
-		//TODO add https listening
+		return http.ListenAndServeTLS(port, hs.SSLCerticifatePath, hs.PrivateKey, nil)
 	}
 
+	return http.ListenAndServe(":"+strconv.Itoa(hs.Port), nil)
 }
 
 //===========[FUNCTIONALITY]====================================================================================================
