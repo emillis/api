@@ -8,6 +8,7 @@ import (
 
 //===========[STATIC/CACHE]====================================================================================================
 
+//This will be used as a default HttpServer
 var defaultHttpServer = HttpServer{
 	Port:      80,
 	UseSecure: false,
