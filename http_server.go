@@ -2,16 +2,18 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"strconv"
 )
 
 //===========[STATIC/CACHE]====================================================================================================
 
 //This will be used as a default HttpServer
 var defaultHttpServer = HttpServer{
-	Port:      80,
-	UseSecure: false,
+	Port:               80,
+	UseSecure:          false,
+	SSLCerticifatePath: "",
+	PrivateKeyPath:     "",
 }
 
 //===========[TYPES]====================================================================================================
@@ -29,6 +31,9 @@ type HttpServer struct {
 
 	//Path to the Private Key file. Only used if UseSecure is set to true
 	PrivateKeyPath string
+
+	//Defines the handler that this HttpServer will use. In not specified, default http handler is used
+	Handler http.Handler
 }
 
 //PRIVATE
@@ -40,6 +45,7 @@ func (hs HttpServer) copy() HttpServer {
 
 //PUBLIC
 
+//Start starts serving requests on the port provided
 func (hs HttpServer) Start() error {
 	port := fmt.Sprintf(":%d", hs.Port)
 
@@ -47,7 +53,12 @@ func (hs HttpServer) Start() error {
 		return http.ListenAndServeTLS(port, hs.SSLCerticifatePath, hs.PrivateKeyPath, nil)
 	}
 
-	return http.ListenAndServe(":"+strconv.Itoa(hs.Port), nil)
+	return http.ListenAndServe(port, nil)
+}
+
+//NewHandler
+func (hs *HttpServer) NewHandler() {
+
 }
 
 //===========[FUNCTIONALITY]====================================================================================================
@@ -59,10 +70,17 @@ func makeHttpServerSane(server *HttpServer) HttpServer {
 	}
 
 	if server.Port < 0 || server.Port > 65535 {
-		server.Port = defaultHttpServer.Port
-
-		//TODO add log message about this
+		log.Fatalf("port specified is out of range. Available 0-65535, got %d", server.Port)
 	}
 
 	return server.copy()
+}
+
+//New initiates and returns new HttpServer
+func New(s *HttpServer) HttpServer {
+	if s == nil {
+		return defaultHttpServer.copy()
+	}
+
+	return makeHttpServerSane(s)
 }
