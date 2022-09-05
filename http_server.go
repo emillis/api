@@ -2,8 +2,10 @@ package api
 
 import (
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"log"
 	"net/http"
+	"os"
 )
 
 //===========[STATIC/CACHE]====================================================================================================
@@ -12,8 +14,9 @@ import (
 var defaultHttpServer = HttpServer{
 	Port:               80,
 	UseSecure:          false,
-	SSLCerticifatePath: "",
+	SSLCertificatePath: "",
 	PrivateKeyPath:     "",
+	Handler:            httprouter.New(),
 }
 
 //===========[TYPES]====================================================================================================
@@ -27,7 +30,7 @@ type HttpServer struct {
 	UseSecure bool
 
 	//Path to the SSL certificate file. Only needed if UseSecure is set to true
-	SSLCerticifatePath string
+	SSLCertificatePath string
 
 	//Path to the Private Key file. Only used if UseSecure is set to true
 	PrivateKeyPath string
@@ -36,51 +39,52 @@ type HttpServer struct {
 	Handler http.Handler
 }
 
-//PRIVATE
-
-//copy makes an identical copy of the HttpServer
-func (hs HttpServer) copy() HttpServer {
-	return hs
-}
-
-//PUBLIC
-
 //Start starts serving requests on the port provided
-func (hs HttpServer) Start() error {
+func (hs *HttpServer) Start() error {
 	port := fmt.Sprintf(":%d", hs.Port)
 
 	if hs.UseSecure {
-		return http.ListenAndServeTLS(port, hs.SSLCerticifatePath, hs.PrivateKeyPath, nil)
+		return http.ListenAndServeTLS(port, hs.SSLCertificatePath, hs.PrivateKeyPath, hs.Handler)
 	}
 
-	return http.ListenAndServe(port, nil)
+	return http.ListenAndServe(port, hs.Handler)
 }
 
 //NewHandler
-func (hs *HttpServer) NewHandler() {
+func (hs *HttpServer) NewResponse() {
 
 }
 
 //===========[FUNCTIONALITY]====================================================================================================
 
 //makeHttpServerSane checks all the value provided in the HttpServer and makes sure that there are no contradictions
-func makeHttpServerSane(server *HttpServer) HttpServer {
+func makeHttpServerSane(server *HttpServer) {
 	if server == nil {
-		return defaultHttpServer.copy()
+		d := defaultHttpServer
+		server = &d
 	}
 
 	if server.Port < 0 || server.Port > 65535 {
 		log.Fatalf("port specified is out of range. Available 0-65535, got %d", server.Port)
 	}
 
-	return server.copy()
+	if server.UseSecure {
+		if _, err := os.Stat(server.SSLCertificatePath); err != nil {
+			log.Fatalf("could not access ssl certification file in location \"%s\"\n%e", server.SSLCertificatePath, err)
+		}
+		if _, err := os.Stat(server.PrivateKeyPath); err != nil {
+			log.Fatalf("could not access private key file in location \"%s\"\n%e", server.PrivateKeyPath, err)
+		}
+	}
+
+	if server.Handler == nil {
+		server.Handler = httprouter.New()
+	}
 }
 
 //New initiates and returns new HttpServer
 func New(s *HttpServer) HttpServer {
-	if s == nil {
-		return defaultHttpServer.copy()
-	}
+	makeHttpServerSane(s)
 
-	return makeHttpServerSane(s)
+	return *s
 }
