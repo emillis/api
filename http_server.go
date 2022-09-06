@@ -37,6 +37,9 @@ type HttpServer struct {
 
 	//Defines the handler that this HttpServer will use. In not specified, default http handler is used
 	Handler http.Handler
+
+	//You can add request handlers through this
+	router *httprouter.Router
 }
 
 //Start starts serving requests on the port provided
@@ -52,13 +55,12 @@ func (hs *HttpServer) Start() error {
 
 //NewHandler
 func (hs *HttpServer) NewResponse() {
-
 }
 
 //===========[FUNCTIONALITY]====================================================================================================
 
 //makeHttpServerSane checks all the value provided in the HttpServer and makes sure that there are no contradictions
-func makeHttpServerSane(server *HttpServer) {
+func makeHttpServerSane(server *HttpServer) HttpServer {
 	if server == nil {
 		d := defaultHttpServer
 		server = &d
@@ -78,13 +80,14 @@ func makeHttpServerSane(server *HttpServer) {
 	}
 
 	if server.Handler == nil {
-		server.Handler = httprouter.New()
+		server.router = httprouter.New()
+		server.Handler = server.router
 	}
+
+	return *server
 }
 
 //New initiates and returns new HttpServer
 func New(s *HttpServer) HttpServer {
-	makeHttpServerSane(s)
-
-	return *s
+	return makeHttpServerSane(s)
 }
