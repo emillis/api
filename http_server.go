@@ -53,8 +53,9 @@ func (hs *HttpServer) Start() error {
 	return http.ListenAndServe(port, hs.Handler)
 }
 
-//NewHandler
-func (hs *HttpServer) NewResponse() {
+//NewResponse adds new
+func (hs *HttpServer) NewResponse(hr HttpResponder) {
+	hr.Register(hs)
 }
 
 //===========[FUNCTIONALITY]====================================================================================================
