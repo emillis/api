@@ -10,8 +10,8 @@ import (
 
 //===========[STATIC/CACHE]====================================================================================================
 
-//This will be used as a default HttpServer
-var defaultHttpServer = HttpServer{
+//This will be used as a default Server
+var defaultHttpServer = Server{
 	Port:               80,
 	UseSecure:          false,
 	SSLCertificatePath: "",
@@ -19,10 +19,14 @@ var defaultHttpServer = HttpServer{
 	Handler:            httprouter.New(),
 }
 
+type Registrar interface {
+	Register(*Server)
+}
+
 //===========[TYPES]====================================================================================================
 
-//HttpServer defines HttpServer type
-type HttpServer struct {
+//Server defines Server type
+type Server struct {
 	//Port on which the http server will be listening. Default 80 for http and 443 for https
 	Port int
 
@@ -35,7 +39,7 @@ type HttpServer struct {
 	//Path to the Private Key file. Only used if UseSecure is set to true
 	PrivateKeyPath string
 
-	//Defines the handler that this HttpServer will use. In not specified, default http handler is used
+	//Defines the handler that this Server will use. In not specified, default http handler is used
 	Handler http.Handler
 
 	//You can add request handlers through this
@@ -43,7 +47,7 @@ type HttpServer struct {
 }
 
 //Start starts serving requests on the port provided
-func (hs *HttpServer) Start() error {
+func (hs *Server) Start() error {
 	port := fmt.Sprintf(":%d", hs.Port)
 
 	if hs.UseSecure {
@@ -53,15 +57,15 @@ func (hs *HttpServer) Start() error {
 	return http.ListenAndServe(port, hs.Handler)
 }
 
-//NewResponse adds new
-func (hs *HttpServer) NewResponse(hr HttpResponder) {
-	hr.Register(hs)
+//NewEntryPoint adds new point of entry to this server
+func (hs *Server) NewEntryPoint(r Registrar) {
+	r.Register(hs)
 }
 
 //===========[FUNCTIONALITY]====================================================================================================
 
-//makeHttpServerSane checks all the value provided in the HttpServer and makes sure that there are no contradictions
-func makeHttpServerSane(server *HttpServer) HttpServer {
+//makeHttpServerSane checks all the value provided in the Server and makes sure that there are no contradictions
+func makeHttpServerSane(server *Server) Server {
 	if server == nil {
 		d := defaultHttpServer
 		server = &d
@@ -88,7 +92,7 @@ func makeHttpServerSane(server *HttpServer) HttpServer {
 	return *server
 }
 
-//New initiates and returns new HttpServer
-func New(s *HttpServer) HttpServer {
+//New initiates and returns new Server
+func New(s *Server) Server {
 	return makeHttpServerSane(s)
 }
