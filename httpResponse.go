@@ -1,7 +1,7 @@
 package api
 
 type HttpResponder interface {
-	Register(hs *HttpServer)
+	Register(hs *Server)
 }
 
 type HttpResponse struct {
@@ -9,6 +9,6 @@ type HttpResponse struct {
 	Path string
 }
 
-func (hr *HttpResponse) Register(hs *HttpServer) {
+func (hr *HttpResponse) Register(hs *Server) {
 
 }
