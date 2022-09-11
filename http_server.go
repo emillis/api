@@ -62,6 +62,11 @@ func (hs *Server) NewEntryPoint(r Registrar) {
 	r.Register(hs)
 }
 
+//Router returns default http router
+func (hs *Server) Router() *httprouter.Router {
+	return hs.router
+}
+
 //===========[FUNCTIONALITY]====================================================================================================
 
 //makeHttpServerSane checks all the value provided in the Server and makes sure that there are no contradictions
